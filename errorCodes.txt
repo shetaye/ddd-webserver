@@ -1,0 +1,6 @@
+For 500 errors:
+0 : Authentication
+1 : User lookup
+2 : Server lookup
+3 : Proposal lookup
+4 : DB errors

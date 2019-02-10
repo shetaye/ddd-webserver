@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
 
-const { user } = require('../discord-interface');
+const { discordUser } = require('../discord-interface');
+
+const { dbUser } = require('../db-interface');
 
 const { checkSnowflake } = require('../utils');
 
@@ -10,7 +12,7 @@ router.get('/:id', function(req, res, next) {
         res.status(401).json(`Malformed ID ${req.params.id}`);
         return;
     }
-    user.getUser(req.params.id)
+    discordUser.getUser(req.params.id)
     .then((result) => {
         const userdata = result.data;
         const avatar_hash = /avatars\/\d+\/([\d\w]+)\./g.exec(userdata.avatar);
@@ -24,7 +26,7 @@ router.get('/:id', function(req, res, next) {
         if(e.reponse) {
             console.log(e.reponse.status);
             console.log(e.response.data);
-            if(e.status == 404) {
+            if(e.response.status == 404) {
                 res.status(404).json({ code: 1, error: 'User not found' });
             }
         }
@@ -40,7 +42,7 @@ router.get('/:id/servers', function(req, res, next) {
         res.status(401).json(`Malformed ID ${req.params.id}`);
         return;
     }
-    user.getServers(req.params.id)
+    discordUser.getServers(req.params.id)
     .then((result) => {
         res.status(200).json(result.data);
     })
@@ -48,7 +50,7 @@ router.get('/:id/servers', function(req, res, next) {
         if(e.reponse) {
             console.log(e.reponse.status);
             console.log(e.response.data);
-            if(e.status == 404) {
+            if(e.response.status == 404) {
                 res.status(404).json({ code: 1, error: 'User not found' });
             }
         }
@@ -60,13 +62,17 @@ router.get('/:id/servers', function(req, res, next) {
 });
 
 router.get('/:id/proposals', function(req, res, next) {
-    new Promise((resolve) => setTimeout(() => resolve(['a', 'b', 'c'], 400)))
-    .then((promises) => {
-        res.status(200).json(promises);
+    if(!checkSnowflake(req.params.id)) {
+        res.status(401).json(`Malformed ID ${req.params.id}`);
+        return;
+    }
+    dbUser.getProposals(req.params.id)
+    .then((proposals) => {
+        res.status(200).json(proposals);
     })
     .catch((e) => {
         console.log(e);
-        res.status(500).json({ code: 1, error: 'Internal server error' })
+        res.status(500).json({ code: 1, error: 'Internal server error' });
     });
 });
 

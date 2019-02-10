@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   description: Frontend API that communicates between the Vue SPA and the Webserver backend.
-  version: "0.0.4"
+  version: "0.0.5"
   title: DDD Frontend API
   contact:
     email: josephs@jtstechnic.com
@@ -100,6 +100,58 @@ paths:
           description: A Proposal with specified ID could not be found.
         '400':
           description: Malformed ID.  ID must be a 64-bit integer.
+        '401':
+          $ref: '#/components/schemas/401'
+        '500':
+          $ref: '#/components/schemas/500'
+  /proposals/{id}/author:
+    get:
+      security:
+        - bearer: []
+      tags:
+        - Proposals
+      summary: Get a proposal's author's user object
+      description: >
+        Get the user object for a proposal's author.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: A Proposal with specified ID could not be found.
+        '400':
+          description: Malformed ID.  ID must be 64-bit integer.
+        '401':
+          $ref: '#/components/schemas/401'
+        '500':
+          $ref: '#/components/schemas/500'
+  /proposals/{id}/server:
+    get:
+      security:
+        - bearer: []
+      tags:
+        - Proposals
+      summary: Get a proposal's server's server object
+      description: >
+        Get the server object for a proposal's server.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Server'
+        '404':
+          description: A Proposal with specified ID could not be found.
+        '400':
+          description: Malformed ID.  ID must be 64-bit integer.
         '401':
           $ref: '#/components/schemas/401'
         '500':

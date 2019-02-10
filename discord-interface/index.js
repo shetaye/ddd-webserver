@@ -2,9 +2,12 @@ const api = require('./api');
 const server = require('./server');
 const user = require('./user');
 
-/* A possible better solution would be to instead return a function that accepts the token as a parameter instead of passing the token as a parameter to every call */
+/*
+Abstractions for the gateway API.
+These functions are responsible for forwarding data to and from the discord gateway.
+*/
 module.exports = {
     api,
-    server,
-    user,
+    discordServer: server,
+    discordUser: user,
 };

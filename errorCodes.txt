@@ -4,3 +4,12 @@ For 500 errors:
 2 : Server lookup
 3 : Proposal lookup
 4 : DB errors
+
+Error structure:
+{
+    "type": "discord" | "axios" | "db" | "internal",
+    "stage": "auth" | "user" | "server" | "proposal" | "gateway",
+    "message": "Human readable error message",
+    "http_status": HTTP Status code | null,
+    "previous": null | error
+}

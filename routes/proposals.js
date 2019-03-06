@@ -13,7 +13,14 @@ router.get('/', function(req, res) {
 
 router.get('/:id', function(req, res) {
     if(!checkSnowflake(req.params.id)) {
-        res.status(401).json(`Malformed ID ${req.params.id}`);
+        //TODO: Standardize error object + wrap error object
+        res.status(401).json({
+            type: 'internal',
+            stage: 'server',
+            message: `Malformed ID ${req.params.id}`,
+            http_status: 401,
+            previous: null,
+        });
         return;
     }
     dbProposal.getProposal(req.params.id)
@@ -21,22 +28,28 @@ router.get('/:id', function(req, res) {
         res.status(200).json(proposal);
     })
     .catch((e) => {
-        if(e.status) {
-            console.log(e.status);
-            if(e.status == 404) {
-                res.status(404).json({ code: 3, error: 'Proposal not found' });
-            }
-        }
-        else{
-            console.log(e);
-        }
-        res.status(500).json({ code: 3, error: 'Internal server error' });
+        //TODO: Standardize error object + wrap error object
+        /* Must be custom */
+        res.status(e.http_status).json({
+            type: 'internal',
+            stage: 'proposal',
+            message: 'Error fetching proposal',
+            http_status: e.http_status,
+            previous: e,
+        });
     });
 });
 
 router.get('/:id/author', function(req, res) {
     if(!checkSnowflake(req.params.id)) {
-        res.status(401).json(`Malformed ID ${req.params.id}`);
+        //TODO: Standardize error object + wrap error object
+        res.status(401).json({
+            type: 'internal',
+            stage: 'server',
+            message: `Malformed ID ${req.params.id}`,
+            http_status: 401,
+            previous: null,
+        });
         return;
     }
     dbProposal.getProposal(req.params.id)
@@ -47,16 +60,20 @@ router.get('/:id/author', function(req, res) {
         console.log(`Finding user #${authorId}`);
         return discordUser.getUser(authorId);
     })
-    .then((result) => {
-        const userdata = result.data;
-        const avatar_hash = /avatars\/\d+\/([\d\w]+)\./g.exec(userdata.avatar);
-        res.status(200).json({
-            id: userdata.id,
-            name: `${userdata.username}#${userdata.discriminator}`,
-            avatar_hash: avatar_hash[1],
-        });
+    .then((author) => {
+        res.status(200).json(author);
     })
     .catch((e) => {
+        //TODO: Standardize error object + wrap error object
+        /* Must be custom */
+        res.status(e.http_status).json({
+            type: e.type,
+            stage: 'proposal',
+            message: 'Error fetching proposal\'s author',
+            http_status: e.http_status,
+            previous: e,
+        });
+        /*
         if(e && e.status) {
             console.log(e.status);
             if(e.status == 404) {
@@ -70,13 +87,20 @@ router.get('/:id/author', function(req, res) {
         else{
             console.log(e);
         }
-        res.status(500).json({ code: 3, error: 'Internal server error' });
+        res.status(500).json({ code: 3, error: 'Internal server error' });*/
     });
 });
 
 router.get('/:id/server', function(req, res) {
     if(!checkSnowflake(req.params.id)) {
-        res.status(401).json(`Malformed ID ${req.params.id}`);
+        //TODO: Standardize error object + wrap error object
+        res.status(401).json({
+            type: 'internal',
+            stage: 'server',
+            message: `Malformed ID ${req.params.id}`,
+            http_status: 401,
+            previous: null,
+        });
         return;
     }
     dbProposal.getProposal(req.params.id)
@@ -87,10 +111,20 @@ router.get('/:id/server', function(req, res) {
         console.log(`Finding server #${serverId}`);
         return discordServer.getServer(serverId);
     })
-    .then((result) => {
-        res.status(200).json(result.data);
+    .then((server) => {
+        res.status(200).json(server);
     })
     .catch((e) => {
+        //TODO: Standardize error object + wrap error object
+        /* Must be custom */
+        res.status(e.http_status).json({
+            type: 'internal',
+            stage: 'proposal',
+            message: 'Error fetching proposal\'s server',
+            http_status: e.http_status,
+            previous: e,
+        });
+        /*
         if(e && e.status) {
             console.log(e.status);
             if(e.status == 404) {
@@ -104,7 +138,7 @@ router.get('/:id/server', function(req, res) {
         else{
             console.log(e);
         }
-        res.status(500).json({ code: 3, error: 'Internal server error' });
+        res.status(500).json({ code: 3, error: 'Internal server error' });*/
     });
 });
 

@@ -27,7 +27,13 @@ router.use(function(req, res, next) {
     console.log(`User logging in with {Authorization: ${req.headers.authorization}}`);
     const authorization = req.headers.authorization;
     if(!authorization) {
-        res.status(400).json({ error: 'Must provide Authentication' });
+        res.status(400).json({
+            type: 'internal',
+            stage: 'auth',
+            message: 'Authentication required',
+            http_status: 400,
+            previous: null,
+        });
     }
     else{
         const token = authorization.split(' ')[1];
@@ -37,12 +43,14 @@ router.use(function(req, res, next) {
             next();
         })
         .catch((e) => {
-            if(e.response) {
-                res.status(401).json({ code: 0, error: `Invalid token ${token}` });
-            }
-            else{
-                res.status(500).json({ code: 0, error: 'Internal server error' });
-            }
+            /* e must be custom */
+            req.status(e.http_status).json({
+                type: 'discord',
+                stage: 'auth',
+                message: e.message,
+                http_status: e.http_status,
+                previous: e,
+            });
         });
     }
 });

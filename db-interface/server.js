@@ -42,7 +42,11 @@ module.exports = {
         .then(([actionResults, voteResults]) => {
             if(actionResults.length == 0) {
                 return Promise.reject({
-                    status: 404,
+                    type: 'db',
+                    stage: 'server',
+                    message: 'Server not found',
+                    http_status: 404,
+                    previous: null,
                 });
             }
             else {

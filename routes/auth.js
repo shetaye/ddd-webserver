@@ -38,9 +38,19 @@ router.post('/token', function(req, res) {
     .then((response) => {
         /* big oof */
         res.status(200).json(response.data);
-    }).catch(() => {
-        res.status(500).json({ error: 'Internal server error' });
+    }).catch((e) => {
+        //TODO: Standardize error object + wrap error object
+        /* e must be an axios error */
+        res.status(500).json({
+            type: 'axios',
+            stage: 'auth',
+            message: 'Internal server error',
+            http_status: 500,
+            previous: null,
+        });
     });
+    
+    
 });
 
 router.post('/refresh', function(req, res) {

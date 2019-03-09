@@ -38,7 +38,8 @@ router.use(function(req, res, next) {
     else{
         const token = authorization.split(' ')[1];
         discord.discordUser.getCurrentUser(token)
-        .then(() => {
+        .then((user) => {
+            req.currentUser = user;
             req.token = token;
             next();
         })

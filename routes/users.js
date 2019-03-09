@@ -19,6 +19,12 @@ router.get('/:id', function(req, res, next) {
         });
         return;
     }
+    /* Special case for ID 0 (Returns the current user info) */
+    if(req.params.id == 0) {
+        /* Reuse from auth query */
+        res.status(200).json(req.currentUser);
+        return;
+    }
     discordUser.getUser(req.params.id)
     .then((user) => {
         res.status(200).json(user);

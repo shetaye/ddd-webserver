@@ -36,7 +36,6 @@ router.post('/token', function(req, res) {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     })
     .then((response) => {
-        /* big oof */
         res.status(200).json(response.data);
     }).catch((e) => {
         //TODO: Standardize error object + wrap error object
@@ -49,12 +48,50 @@ router.post('/token', function(req, res) {
             previous: null,
         });
     });
-    
-    
 });
 
 router.post('/refresh', function(req, res) {
-
+    if(!req.body.refresh_token) {
+        console.log('Oops');
+        res.sendStatus(400);
+        return;
+    }
+    axios({
+        method: 'post',
+        url: tokenUrl,
+        params: {
+            client_id: clientId,
+            client_secret: clientSecret,
+            grant_type: 'refresh_token',
+            refresh_token: req.body.refresh_token,
+            redirect_uri: 'http://ddd.io:1024/authRedirect',
+            scope: 'identify guilds',
+        },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    })
+    .then((response) => {
+        res.status(200).json(response.data);
+    }).catch((e) => {
+        //TODO: Standardize error object + wrap error object
+        /* e must be an axios error */
+        if(!e.response) {
+            res.status(500).json({
+                type: 'axios',
+                stage: 'auth',
+                message: 'Internal auth error while requesting',
+                http_status: 500,
+                previous: null,
+            });
+            return;
+        }
+        res.status(e.response.status).json({
+            type: 'axios',
+            stage: 'auth',
+            message: 'Internal auth error',
+            http_status: e.response.status,
+            previous: e.response.data,
+        });
+    });
 });
 
 module.exports = router;

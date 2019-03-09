@@ -129,7 +129,11 @@ module.exports = {
             url: '/users/@me',
         })
         .then((result) => {
-            return result.data;
+            return {
+                id: result.data.id,
+                name: `${result.data.username}#${result.data.discriminator}`,
+                avatar_hash: result.data.avatar,
+            };
         })
         //TODO: Add catch that creates standard error object and throws it
         .catch((e) => {

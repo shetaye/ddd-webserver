@@ -31,7 +31,6 @@ module.exports = {
             .where('proposal.proposal_id', id);
         return Promise.all([action, vote])
         .then(([actionResults, voteResults]) => {
-            console.log(voteResults);
             if(actionResults.length == 0) {
                 return Promise.reject({
                     type: 'db',

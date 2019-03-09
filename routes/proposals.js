@@ -30,12 +30,12 @@ router.get('/:id', function(req, res) {
     .catch((e) => {
         //TODO: Standardize error object + wrap error object
         /* Must be custom */
-        res.status(e.http_status).json({
-            type: 'internal',
+        res.status(e.http_status ? e.http_status : 500).json({
+            type: 'db',
             stage: 'proposal',
             message: 'Error fetching proposal',
-            http_status: e.http_status,
-            previous: e,
+            http_status: e.http_status ? e.http_status : 500,
+            previous: null,
         });
     });
 });
@@ -66,12 +66,12 @@ router.get('/:id/author', function(req, res) {
     .catch((e) => {
         //TODO: Standardize error object + wrap error object
         /* Must be custom */
-        res.status(e.http_status).json({
+        res.status(e.http_status ? e.http_status : 500).json({
             type: e.type,
             stage: 'proposal',
             message: 'Error fetching proposal\'s author',
-            http_status: e.http_status,
-            previous: e,
+            http_status: e.http_status ? e.http_status : 500,
+            previous: null,
         });
         /*
         if(e && e.status) {
@@ -112,17 +112,18 @@ router.get('/:id/server', function(req, res) {
         return discordServer.getServer(serverId);
     })
     .then((server) => {
+        console.log(server);
         res.status(200).json(server);
     })
     .catch((e) => {
         //TODO: Standardize error object + wrap error object
         /* Must be custom */
-        res.status(e.http_status).json({
-            type: 'internal',
+        res.status(e.http_status ? e.http_status : 500).json({
+            type: e.type,
             stage: 'proposal',
             message: 'Error fetching proposal\'s server',
-            http_status: e.http_status,
-            previous: e,
+            http_status: e.http_status ? e.http_status : 500,
+            previous: null,
         });
         /*
         if(e && e.status) {

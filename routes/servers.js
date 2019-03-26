@@ -7,6 +7,8 @@ const { checkSnowflake } = require('../utils');
 
 const { dbServer } = require('../db-interface');
 
+const { checkServer } = require('../boundary-checks');
+
 router.get('/:id', function(req, res, next) {
     if(!checkSnowflake(req.params.id)) {
         //TODO: Standardize error object + wrap error object
@@ -21,6 +23,10 @@ router.get('/:id', function(req, res, next) {
     }
     discordServer.getServer(req.params.id)
     .then((server) => {
+        /* Boundary check */
+        return checkServer(server, req);
+    })
+    .then((server) => {
         res.status(200).json(server);
     })
     .catch((e) => {
@@ -33,19 +39,6 @@ router.get('/:id', function(req, res, next) {
             http_status: e.http_status,
             previous: e,
         });
-        /*
-        if(e.reponse) {
-            console.log(e.reponse.status);
-            console.log(e.response.data);
-            if(e.response.status == 404) {
-                res.status(404).json({ code: 2, error: 'Server not found' });
-            }
-        }
-        else{
-            console.log(e.message);
-        }
-        res.status(500).json({ code: 2, error: 'Internal server error' });
-        */
     });
 });
 
@@ -61,7 +54,14 @@ router.get('/:id/members', function(req, res, next) {
         });
         return;
     }
-    discordServer.getUsers(req.params.id)
+    discordServer.getServer(req.params.id)
+    .then((server) => {
+        /* Boundary check */
+        return checkServer(server, req);
+    })
+    .then(() => {
+        return discordServer.getUsers(req.params.id);
+    })
     .then((members) => {
         res.status(200).json(members);
     })
@@ -75,19 +75,6 @@ router.get('/:id/members', function(req, res, next) {
             http_status: e.http_status,
             previous: e,
         });
-        /*
-        if(e.reponse) {
-            console.log(e.reponse.status);
-            console.log(e.response.data);
-            if(e.responsestatus == 404) {
-                res.status(404).json({ code: 2, error: 'Server not found' });
-            }
-        }
-        else{
-            console.log(e.message);
-        }
-        res.status(500).json({ code: 2, error: 'Internal server error' });
-        */
     });
 });
 
@@ -103,7 +90,14 @@ router.get('/:id/proposals', function(req, res, next) {
         });
         return;
     }
-    dbServer.getProposals(req.params.id)
+    discordServer.getServer(req.params.id)
+    .then((server) => {
+        /* Boundary check */
+        return checkServer(server, req);
+    })
+    .then(() => {
+        return dbServer.getProposals(req.params.id);
+    })
     .then((proposals) => {
         res.status(200).json(proposals);
     })
@@ -117,10 +111,6 @@ router.get('/:id/proposals', function(req, res, next) {
             http_status: e.http_status,
             previous: e,
         });
-        /*
-        console.log(e);
-        res.status(500).json({ code: 2, error: 'Internal server error' });
-        */
     });
 });
 

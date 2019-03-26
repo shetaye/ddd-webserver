@@ -6,6 +6,8 @@ const { discordUser, discordServer } = require('../discord-interface');
 
 const { checkSnowflake } = require('../utils');
 
+const { checkProposal } = require('../boundary-checks');
+
 /* GET users listing. */
 router.get('/', function(req, res) {
     res.send('All proposals');
@@ -24,6 +26,10 @@ router.get('/:id', function(req, res) {
         return;
     }
     dbProposal.getProposal(req.params.id)
+    .then((proposal) => {
+        /* Boundary check */
+        return checkProposal(proposal, req);
+    })
     .then((proposal) => {
         res.status(200).json(proposal);
     })
@@ -54,6 +60,10 @@ router.get('/:id/author', function(req, res) {
     }
     dbProposal.getProposal(req.params.id)
     .then((proposal) => {
+        /* Boundary check */
+        return checkProposal(proposal, req);
+    })
+    .then((proposal) => {
         return proposal.author;
     })
     .then((authorId) => {
@@ -73,21 +83,6 @@ router.get('/:id/author', function(req, res) {
             http_status: e.http_status ? e.http_status : 500,
             previous: null,
         });
-        /*
-        if(e && e.status) {
-            console.log(e.status);
-            if(e.status == 404) {
-                res.status(404).json({ code: 3, error: 'Proposal not found' });
-            }
-        }
-        else if(e && e.response) {
-            console.log(e.response.status);
-            console.log(e.response.data);
-        }
-        else{
-            console.log(e);
-        }
-        res.status(500).json({ code: 3, error: 'Internal server error' });*/
     });
 });
 
@@ -104,6 +99,10 @@ router.get('/:id/server', function(req, res) {
         return;
     }
     dbProposal.getProposal(req.params.id)
+    .then((proposal) => {
+        /* Boundary check */
+        return checkProposal(proposal, req);
+    })
     .then((proposal) => {
         return proposal.server;
     })
@@ -125,21 +124,6 @@ router.get('/:id/server', function(req, res) {
             http_status: e.http_status ? e.http_status : 500,
             previous: null,
         });
-        /*
-        if(e && e.status) {
-            console.log(e.status);
-            if(e.status == 404) {
-                res.status(404).json({ code: 3, error: 'Proposal not found' });
-            }
-        }
-        else if(e && e.response) {
-            console.log(e.response.status);
-            console.log(e.response.data);
-        }
-        else{
-            console.log(e);
-        }
-        res.status(500).json({ code: 3, error: 'Internal server error' });*/
     });
 });
 

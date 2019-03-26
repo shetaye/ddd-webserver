@@ -27,8 +27,8 @@ module.exports = {
                     type: 'axios',
                     stage: 'server',
                     message: 'Error while calling endpoint',
-                    http_status: null,
-                    previous: e,
+                    http_status: 500,
+                    previous: null,
                 };
             }
             if(e.response.status == 404) {
@@ -37,7 +37,7 @@ module.exports = {
                     stage: 'server',
                     message: 'Server not found or unavailable',
                     http_status: e.response.status,
-                    previous: e.data,
+                    previous: e.response.data,
                 };
             }
             if(e.response.status == 401) {
@@ -88,8 +88,8 @@ module.exports = {
                     type: 'axios',
                     stage: 'server',
                     message: 'Error while calling endpoint',
-                    http_status: null,
-                    previous: e,
+                    http_status: 500,
+                    previous: null,
                 };
             }
             if(e.response.status == 404) {

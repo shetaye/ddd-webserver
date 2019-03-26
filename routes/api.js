@@ -17,6 +17,7 @@ router.use(function(req, res, next) {
     next();
 });
 router.use('/auth', authRouter);
+
 /* Authentication checker */
 router.use(function(req, res, next) {
     /* Passthrough for OPTIONS */
@@ -45,7 +46,7 @@ router.use(function(req, res, next) {
         })
         .catch((e) => {
             /* e must be custom */
-            req.status(e.http_status).json({
+            res.status(e.http_status).json({
                 type: 'discord',
                 stage: 'auth',
                 message: e.message,

@@ -27,8 +27,8 @@ module.exports = {
                     type: 'axios',
                     stage: 'user',
                     message: 'Error while calling endpoint',
-                    http_status: null,
-                    previous: e,
+                    http_status: 500,
+                    previous: null,
                 };
             }
             if(e.response.status == 404) {
@@ -37,7 +37,7 @@ module.exports = {
                     stage: 'user',
                     message: 'User not found',
                     http_status: e.response.status,
-                    previous: e.data,
+                    previous: e.response.data,
                 };
             }
             if(e.response.status == 401) {
@@ -46,7 +46,7 @@ module.exports = {
                     stage: 'user',
                     message: 'Malformed input',
                     http_status: e.response.status,
-                    previous: e.data,
+                    previous: e.response.data,
                 };
             }
             if(e.response.status == 500) {
@@ -55,7 +55,7 @@ module.exports = {
                     stage: 'user',
                     message: 'Gateway error while fetching user',
                     http_status: 500,
-                    previous: e.data,
+                    previous: e.response.data,
                 };
             }
         });
@@ -88,8 +88,8 @@ module.exports = {
                     type: 'axios',
                     stage: 'server',
                     message: 'Error while calling endpoint',
-                    http_status: null,
-                    previous: e,
+                    http_status: 500,
+                    previous: null,
                 };
             }
             if(e.response.status == 404) {
@@ -98,7 +98,7 @@ module.exports = {
                     stage: 'server',
                     message: 'User not found',
                     http_status: e.response.status,
-                    previous: e.data,
+                    previous:e.response.data,
                 };
             }
             if(e.response.status == 401) {
@@ -107,7 +107,7 @@ module.exports = {
                     stage: 'server',
                     message: 'Malformed input',
                     http_status: e.response.status,
-                    previous: e.data,
+                    previous: e.response.data,
                 };
             }
             if(e.response.status == 500) {
@@ -116,7 +116,7 @@ module.exports = {
                     stage: 'server',
                     message: 'Gateway error while fetching user',
                     http_status: 500,
-                    previous: e.data,
+                    previous: e.response.data,
                 };
             }
         });
@@ -143,7 +143,7 @@ module.exports = {
                     stage: 'auth',
                     message: 'Malformed input',
                     http_status: 401,
-                    previous: null,
+                    previous: e.response.data,
                 };
             }
             else{
@@ -153,6 +153,60 @@ module.exports = {
                     message: 'Internal discord error while authenticating',
                     http_status: 500,
                     previous: null,
+                };
+            }
+        });
+    },
+    /*
+    {
+        user_id: <id>,
+        server_ids: [<id>],
+        user_ids: [<id>],
+    }
+    */
+    getBoundaryData(id) {
+        return api.gateway.request({
+            url: `/users/${id}/boundaries`,
+        })
+        .then((result) => {
+            return result.data;
+        })
+        .catch((e) => {
+            /* Must be axios (directly calling axios) */
+            if(!e.response) {
+                throw {
+                    type: 'axios',
+                    stage: 'server',
+                    message: 'Error while calling endpoint',
+                    http_status: 500,
+                    previous: null,
+                };
+            }
+            if(e.response.status == 404) {
+                throw {
+                    type: 'axios',
+                    stage: 'server',
+                    message: 'User not found',
+                    http_status: e.response.status,
+                    previous: e.response.data,
+                };
+            }
+            if(e.response.status == 401) {
+                throw {
+                    type: 'axios',
+                    stage: 'server',
+                    message: 'Malformed input',
+                    http_status: e.response.status,
+                    previous: e.response.data,
+                };
+            }
+            if(e.response.status == 500) {
+                throw {
+                    type: 'axios',
+                    stage: 'server',
+                    message: 'Gateway error while fetching user',
+                    http_status: 500,
+                    previous: e.response.data,
                 };
             }
         });

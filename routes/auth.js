@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const axios = require('axios');
+const btoa = require('btoa');
 
-const tokenUrl = 'https://discordapp.com/api/v6/oauth2/token';
+const tokenUrl = 'https://discordapp.com/api/oauth2/token';
 let clientSecret, clientId;
 
 fs.readFile('config.json', (err, data) => {
@@ -26,26 +27,37 @@ router.post('/token', function(req, res) {
         method: 'post',
         url: tokenUrl,
         params: {
-            client_id: clientId,
-            client_secret: clientSecret,
             grant_type: 'authorization_code',
             code: req.body.code,
             redirect_uri: 'http://ddd.io:1024/authRedirect',
             scope: 'identify guilds',
         },
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
+        },
     })
     .then((response) => {
         res.status(200).json(response.data);
     }).catch((e) => {
         //TODO: Standardize error object + wrap error object
         /* e must be an axios error */
-        res.status(500).json({
+        if(!e.response) {
+            res.status(500).json({
+                type: 'axios',
+                stage: 'auth',
+                message: 'Internal server error',
+                http_status: 500,
+                previous: null,
+            });
+            return;
+        }
+        res.status(e.response.status).json({
             type: 'axios',
             stage: 'auth',
-            message: 'Internal server error',
-            http_status: 500,
-            previous: null,
+            message: 'Internal auth error',
+            http_status: e.response.status,
+            previous: e.response.data,
         });
     });
 });
@@ -60,14 +72,15 @@ router.post('/refresh', function(req, res) {
         method: 'post',
         url: tokenUrl,
         params: {
-            client_id: clientId,
-            client_secret: clientSecret,
             grant_type: 'refresh_token',
             refresh_token: req.body.refresh_token,
             redirect_uri: 'http://ddd.io:1024/authRedirect',
             scope: 'identify guilds',
         },
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
+        },
     })
     .then((response) => {
         res.status(200).json(response.data);

@@ -1,0 +1,21 @@
+All are implemented client first (must be implemented on client, but not required on server)
+
+Proposals:
+refetchProposalAll
+refetchProposal
+refetchProposalAuthor
+refetchProposalServer
+refetchProposalVote
+
+Servers:
+refetchServerAll
+refetchServer
+refetchServerUsers
+refetchServerProposals
+
+User:
+refetchUserAll
+refetchUser
+refetchUserProposals
+refetchUserServers
+

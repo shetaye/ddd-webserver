@@ -2,6 +2,7 @@ const proposal = require('./proposal');
 const user = require('./user');
 const server = require('./server');
 const db = require('./db');
+const vote = require('./vote');
 
 /*
 Abstractions for the Database.
@@ -14,4 +15,5 @@ module.exports = {
     dbProposal: proposal,
     dbUser: user,
     dbServer: server,
+    dbVote: vote,
 };

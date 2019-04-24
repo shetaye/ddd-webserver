@@ -1,9 +1,6 @@
 const db = require('./db');
 
 module.exports = {
-    getServer(id) {
-        return Promise.resolve(undefined);
-    },
     getProposals(id) {
         const action = db('proposal')
             .select(

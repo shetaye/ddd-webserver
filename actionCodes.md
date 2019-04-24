@@ -11,7 +11,7 @@ These codes are returned with an action
 # Role Management
 ## 2000 - Add role
 `p1`: role id\
-`p2`: *\
+`p2`: role name\
 `p3`: *
 ## 2001 - Modify role permissions
 `p1`: role id\
@@ -36,7 +36,7 @@ These codes are returned with an action
 # Channel Mangement
 ## 3000 - Add channel
 `p1`: channel id\
-`p2`: *\
+`p2`: channel name\
 `p3`: *
 ## 3001 - Remove channel
 `p1`: channel id\

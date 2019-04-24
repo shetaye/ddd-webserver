@@ -1,4 +1,5 @@
 const db = require('./db');
+const { generateSnowflake } = require('../utils');
 
 module.exports = {
     getProposal(id) {
@@ -13,7 +14,10 @@ module.exports = {
                 'proposal.status',
                 'action.action_id',
                 'action.position',
-                'action.code')
+                'action.code',
+                'action.p0',
+                'action.p1',
+                'action.p2')
             .innerJoin('action', 'proposal.proposal_id', 'action.proposal_id')
             .where('proposal.proposal_id', id);
         const vote = db('proposal')
@@ -45,9 +49,13 @@ module.exports = {
                 const proposal = actionResults[0];
                 const proposalVote = voteResults[0];
                 const actions = actionResults.map((row) => {
+                    console.log(actions);
                     return {
                         position: row.position,
                         code: row.code,
+                        p0: row.p0,
+                        p1: row.p1,
+                        p2: row.p2,
                     };
                 });
                 return {
@@ -59,9 +67,39 @@ module.exports = {
                     server: proposal.server,
                     actions: actions,
                     status: proposal.status,
-                    votes: [parseInt(proposalVote.y), parseInt(proposalVote.n)],
+                    votes: [proposalVote.y ? parseInt(proposalVote.y) : 0, proposalVote.n ? parseInt(proposalVote.n) : 0],
                 };
             }
+        });
+    },
+    insertNewProposal(proposal) {
+        const id = generateSnowflake();
+        const proposalQ = db('proposal')
+            .insert({
+                proposal_id: id,
+                name: proposal.name,
+                author: proposal.author,
+                created_on: proposal.createdOn,
+                expires_in: proposal.expiresOn - proposal.createdOn,
+                server: proposal.server,
+                // All proposals start open
+                status: 0,
+            });
+        proposalQ.then(() => {
+            const idActions = proposal.actions.map(action => {
+                return {
+                    action_id: generateSnowflake(),
+                    proposal_id: id,
+                    position: action.position,
+                    code: action.code,
+                };
+            });
+            return db('action')
+                // Actions are assumed to be pre-validated and formatted
+                .insert(idActions);
+        })
+        .then(() => {
+            return proposal;
         });
     },
 };

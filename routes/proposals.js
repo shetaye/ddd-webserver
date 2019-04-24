@@ -15,7 +15,132 @@ const live = require('../livefeed');
 router.get('/', function(req, res) {
     res.send('All proposals');
 });
-
+router.post('/', function(req, res) {
+    const proposal = req.body.proposal;
+    if(!proposal) {
+        // TODO: Standardize error object + wrap error object
+        res.status(400).json({
+            type: 'internal',
+            stage: 'server',
+            message: `Malformed proposal ${req.body.vote}`,
+            http_status: 400,
+            previous: null,
+        });
+        return;
+    }
+    // Check validity
+    const author = proposal.author;
+    // rounding (just in case)
+    // I ignore/disregard a createdOn property (never trust the client!)
+    const createdOn = Math.floor(Date.now() / 1000);
+    proposal.createdOn = createdOn;
+    const expiresOn = Math.round(proposal.expiresOn);
+    const server = proposal.server;
+    const actions = proposal.actions;
+    const name = proposal.name;
+    // TODO: Actual codes
+    const validActionCodes = [0, 1, 2];
+    // First, check simple values
+    if(createdOn > Math.floor(Date.now() / 1000)) {
+        res.status(400).json({
+            type: 'internal',
+            stage: 'proposal',
+            message: 'Invalid created time',
+            http_status: 400,
+            previous: null,
+        });
+        return;
+    }
+    if(!name || name.length > 255) {
+        res.status(400).json({
+            type: 'internal',
+            stage: 'proposal',
+            message: 'Invalid name',
+            http_status: 400,
+            previous: null,
+        });
+        return;
+    }
+    if(actions.length == 0) {
+        res.status(400).json({
+            type: 'internal',
+            stage: 'proposal',
+            message: 'Actions required',
+            http_status: 400,
+            previous: null,
+        });
+        return;
+    }
+    for(let i = 0; i < actions.length; i++) {
+        // TODO: Check parameters
+        if(!validActionCodes.includes(actions[i].code)) {
+            res.status(400).json({
+                type: 'internal',
+                stage: 'proposal',
+                message: 'Invalid code',
+                http_status: 400,
+                previous: null,
+            });
+            return;
+        }
+    }
+    if(expiresOn < createdOn) {
+        res.status(400).json({
+            type: 'internal',
+            stage: 'proposal',
+            message: 'Invalid expiry',
+            http_status: 400,
+            previous: null,
+        });
+        return;
+    }
+    if(!(checkSnowflake(server) && checkSnowflake(author))) {
+        res.status(400).json({
+            type: 'internal',
+            stage: 'proposal',
+            message: 'Invalid IDs',
+            http_status: 400,
+            previous: null,
+        });
+        return;
+    }
+    // To validate the author, we can check
+    // if the currently logged in user is the author
+    if(author != req.currentUser.id) {
+        res.status(400).json({
+            type: 'internal',
+            stage: 'server',
+            message: 'Invalid author',
+            http_status: 400,
+            previous: null,
+        });
+        return;
+    }
+    // To validate the server, we can check
+    // if the user is a member of the server
+    // which the boundary check already does
+    checkProposal(proposal, req)
+    .then(checkedProposal => {
+        // By now the proposal must be valid
+        return dbProposal.insertNewProposal(checkedProposal);
+    })
+    .then(() => {
+        live.sendEventTo('server', proposal.server, 'refetchProposals');
+        live.sendEventTo('user', proposal.author, 'refetchProposals');
+        res.status(201);
+    })
+    .catch((e) => {
+        // TODO: Standardize error object + wrap error object
+        /* Must be custom */
+        res.status(e.http_status ? e.http_status : 500).json({
+            type: 'db',
+            stage: 'proposal',
+            message: 'Error fetching proposal',
+            http_status: e.http_status ? e.http_status : 500,
+            previous: null,
+        });
+    });
+});
 router.get('/:id', function(req, res) {
     if(!checkSnowflake(req.params.id)) {
         // TODO: Standardize error object + wrap error object
@@ -158,7 +283,10 @@ router.post('/:id/vote', function(req, res) {
         // the current vote status for the user (we would have thrown and error if not)
         // Push out new vote info
         // Signal refetch
+        // Refetch should also reach the original sender
         live.sendEventTo('proposal', proposal.id, 'refetchProposal');
+        live.sendEventTo('proposal', proposal.id, 'refetchProposalVote');
+        // I send the proposal back for speed
         res.status(200).json({
             proposal: proposal,
             vote: req.body.vote,
@@ -176,7 +304,6 @@ router.post('/:id/vote', function(req, res) {
         });
     });
 });
-
 router.get('/:id/author', function(req, res) {
     if(!checkSnowflake(req.params.id)) {
         // TODO: Standardize error object + wrap error object

@@ -1,6 +1,8 @@
 const { generateSnowflake } = require('../../utils');
 exports.seed = function(knex, Promise) {
-    // Deletes ALL existing entries
+    function randomFrom(array) {
+        return array[Math.floor(Math.random() * array.length)];
+    }
     /* Generate ids */
     // User id mappings used to generate proposal names and such
     const userIDs = {
@@ -11,6 +13,10 @@ exports.seed = function(knex, Promise) {
     const serverIDs = [
         '339838865370120192',
     ];
+    const actionCodes = {
+        1000: [ randomFrom(Object.keys(userIDs)), 'Stupid kick reason', null],
+        1001: [ randomFrom(Object.keys(userIDs)), 'Stupid ban reason', null],
+    };
     const proposals = [];
     const actions = [];
     const votes = [];
@@ -21,7 +27,7 @@ exports.seed = function(knex, Promise) {
             name: `${userIDs[id]}'s Proposal`,
             author: id,
             // random server
-            server: serverIDs[Math.floor(Math.random() * serverIDs.length)],
+            server: randomFrom(serverIDs),
             created_on: Math.floor(Date.now() / 1000),
             expires_in: Math.floor(Math.random() * 10000) + 60000,
             status: 0,
@@ -31,12 +37,16 @@ exports.seed = function(knex, Promise) {
     proposals.map(proposal => {
         // Between 1 and 10 actions
         for(let i = 0; i < Math.floor(Math.random() * 10) + 1; i++) {
+            const code = randomFrom(Object.keys(actionCodes));
+            const params = actionCodes[code];
             actions.push({
                 action_id: generateSnowflake(),
                 proposal_id: proposal.proposal_id,
                 position: i,
-                // TODO: Make actual codes
-                code: 0,
+                code: code,
+                p0: params[0],
+                p1: params[1],
+                p2: params[2],
             });
         }
         // Each user will may end up voting for a proposal (y, n) or not

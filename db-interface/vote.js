@@ -9,6 +9,7 @@ module.exports = {
             .andWhere('vote.user_id', uid);
         return vote
         .then((results) => {
+            console.log(results);
             if(results.length == 0 || results[0].vote == 'nv') {
                 return {
                     voted: false,
@@ -29,10 +30,12 @@ module.exports = {
             .update({
                 vote: vote.vote,
             });
+        console.log(voteQuery.toSQL().toNative());
         return voteQuery
         .then(results => {
-            if(results.length == 0) {
-                return db('vote')
+            if(!results) {
+                console.log('Creating since update failed');
+                const insert = db('vote')
                 .where('vote.proposal_id', id)
                 .andWhere('vote.user_id', uid)
                 .insert({
@@ -40,10 +43,10 @@ module.exports = {
                     user_id: uid,
                     vote: vote.vote,
                 });
+                return insert;
             }
         })
         .then(results => {
-            console.log(results);
             return results;
         });
     },

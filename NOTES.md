@@ -48,15 +48,14 @@ The Discord Gateway is always running and has a gateway connection to Discord
     * Add a role that is required to vote (Prevent new invites / alt-accounts from voting)
 
 ## Publish proposals
-* Real actions
+* Real actions ✓ ?th April 2019
     * Flesh out existing data with real action info
     * Fill out db with actions
-* Autocomplete framework
+* Autocomplete framework ✓ 28th April 2019
     * Endpoints for listing all servers, users, channels, roles, etc.
+    * Server listing is already available for the currentUser module
     * /servers/ - All servers available to the user
-    * /servers/:id/channels - All channels on a specific server
-    * /servers/:id/roles - All roles on a specific server
-    * /servers/:id/users - All users on a specific server
+    * /servers/:id/autocomplete - Monolithic autocomplete object
     * Other things like action names can be hardcoded
     * These endpoints would really only provide basic ID and display info (ID + name is most important)
 * Publish proposals
@@ -75,6 +74,7 @@ The Discord Gateway is always running and has a gateway connection to Discord
     * Implement all unimplemented liveupdate client events
     * Finish all TODOs
     *   * Reinforce auth state usage
+    *   * Trim excess code errors + TS
 ## Real actions and server sttings
 * Server and Proposal Properties
     * Add new table columns and DB methods

@@ -49,7 +49,6 @@ module.exports = {
                 const proposal = actionResults[0];
                 const proposalVote = voteResults[0];
                 const actions = actionResults.map((row) => {
-                    console.log(actions);
                     return {
                         position: row.position,
                         code: row.code,

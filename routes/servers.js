@@ -114,4 +114,59 @@ router.get('/:id/proposals', function(req, res, next) {
     });
 });
 
+router.get('/:id/autocomplete', function(req, res) {
+    // Returns an autocomplete object that contains server id, user ids, and role ids
+    if(!checkSnowflake(req.params.id)) {
+        //TODO: Standardize error object + wrap error object
+        res.status(401).json({
+            type: 'internal',
+            stage: 'server',
+            message: `Malformed ID ${req.params.id}`,
+            http_status: 401,
+            previous: null,
+        });
+        return;
+    }
+    discordServer.getServer(req.params.id)
+    .then((server) => {
+        /* Boundary check */
+        return checkServer(server, req);
+    })
+    .then((server) => {
+        // Retrieve data
+        return Promise.all([
+            discordServer.getRoles(req.params.id),
+            discordServer.getUsers(req.params.id),
+            Promise.resolve(server),
+        ]);
+    })
+    .then(([roles, users, server]) => {
+        res.status(200).json({
+            roles,
+            users: users.map((user) => {
+                return {
+                    id: user.id,
+                    name: user.name,
+                    nick: user.nick,
+                };
+            }),
+            server: {
+                id: server.id,
+                name: server.name,
+            },
+        });
+    })
+    .catch((e) => {
+        //TODO: Standardize error object + wrap error object
+        /* e must be custom */
+        res.status(e.http_status).json({
+            type: 'internal',
+            stage: 'server',
+            message: 'Error fetching server\'s autocomplete data',
+            http_status: e.http_status,
+            previous: e,
+        });
+    });
+});
+
 module.exports = router;

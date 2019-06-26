@@ -9,18 +9,44 @@ exports.seed = function(knex, Promise) {
         '118427639835918338': 'Jonas',
         '118715872973029376': 'Nibolas',
         '173186678263906307': 'Senator Brill',
+        '289870812293365771': 'ZigZach',
+        '340185571173335041': 'Stupid Commie',
     };
+    const roleIDs = [
+        '454991932133867534', /* Robot */
+        '502937547857461248', /* Party Elite */
+        '465683766153838602', /* Party Member */
+        '492109087836864515', /* Citizen */
+        // '339838865370120192', /* @everyone */
+    ];
+    const channelIDs = [
+        '472536936536604672', /* general */
+        '507394278562070529', /* polls */
+        '339838865370120193', /* General 1 (voice) */
+    ]
     const serverIDs = [
-        '339838865370120192',
+        '339838865370120192', /* URC */
     ];
     const actionCodes = {
-        1000: [ randomFrom(Object.keys(userIDs)), 'Stupid kick reason', null],
-        1001: [ randomFrom(Object.keys(userIDs)), 'Stupid ban reason', null],
+        1000: [ randomFrom(Object.keys(userIDs)), 'Stupid kick reason', null ],
+        1001: [ randomFrom(Object.keys(userIDs)), 'Stupid ban reason', null ],
+        2000: [ 'A new role', null, null ],
+        2001: [ randomFrom(roleIDs), 'rolePermissionWIP', 'roleValueWIP' ],
+        2002: [ randomFrom(roleIDs), 'roleSettingWIP', 'roleValueWIP' ],
+        2003: [ randomFrom(roleIDs), null, null ],
+        2004: [ randomFrom(roleIDs), randomFrom(Object.keys(userIDs)), null ],
+        2005: [ randomFrom(roleIDs), randomFrom(Object.keys(userIDs)), null ],
+        3000: [ 'A new channel', null, null ],
+        3001: [ randomFrom(channelIDs), null, null ],
+        3002: [ randomFrom(channelIDs), 'channelPermissionWIP', 'channelValueWIP' ],
+        3003: [ randomFrom(channelIDs), 'channelSettingWIP', 'channelValueWIP' ],
+        4000: [ 'serverSettingWIP', 'serverValueWIP', null ],
     };
     const proposals = [];
     const actions = [];
     const votes = [];
     // Generate a proposal for every user
+    // eslint-disable-next-line
     for(let id in userIDs) {
         proposals.push({
             proposal_id: generateSnowflake(),
@@ -35,9 +61,9 @@ exports.seed = function(knex, Promise) {
     }
     // Generate a random action set and vote set for each proposal
     proposals.map(proposal => {
-        // Between 1 and 10 actions
-        for(let i = 0; i < Math.floor(Math.random() * 10) + 1; i++) {
-            const code = randomFrom(Object.keys(actionCodes));
+        // All actions
+        for(let i = 0; i < Object.keys(actionCodes).length; i++) {
+            const code = Object.keys(actionCodes)[i];
             const params = actionCodes[code];
             actions.push({
                 action_id: generateSnowflake(),

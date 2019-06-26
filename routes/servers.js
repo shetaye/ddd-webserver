@@ -14,7 +14,7 @@ router.get('/:id', function(req, res, next) {
         //TODO: Standardize error object + wrap error object
         res.status(401).json({
             type: 'internal',
-            stage: 'server',
+            stage: 'serverRouting',
             message: `Malformed ID ${req.params.id}`,
             http_status: 401,
             previous: null,
@@ -34,7 +34,7 @@ router.get('/:id', function(req, res, next) {
         /* Must be custom */
         res.status(e.http_status).json({
             type: 'internal',
-            stage: 'server',
+            stage: 'serverRouting',
             message: 'Error fetching server',
             http_status: e.http_status,
             previous: e,
@@ -47,7 +47,7 @@ router.get('/:id/members', function(req, res, next) {
         //TODO: Standardize error object + wrap error object
         res.status(401).json({
             type: 'internal',
-            stage: 'server',
+            stage: 'serverRouting',
             message: `Malformed ID ${req.params.id}`,
             http_status: 401,
             previous: null,
@@ -70,7 +70,7 @@ router.get('/:id/members', function(req, res, next) {
         /* Must be custom */
         res.status(e.http_status).json({
             type: 'internal',
-            stage: 'server',
+            stage: 'serverRouting',
             message: 'Error fetching server\'s members',
             http_status: e.http_status,
             previous: e,
@@ -83,7 +83,7 @@ router.get('/:id/proposals', function(req, res, next) {
         //TODO: Standardize error object + wrap error object
         res.status(401).json({
             type: 'internal',
-            stage: 'server',
+            stage: 'serverRouting',
             message: `Malformed ID ${req.params.id}`,
             http_status: 401,
             previous: null,
@@ -106,7 +106,7 @@ router.get('/:id/proposals', function(req, res, next) {
         /* e must be custom */
         res.status(e.http_status).json({
             type: 'internal',
-            stage: 'server',
+            stage: 'serverRouting',
             message: 'Error fetching server\'s proposals',
             http_status: e.http_status,
             previous: e,
@@ -120,7 +120,7 @@ router.get('/:id/autocomplete', function(req, res) {
         //TODO: Standardize error object + wrap error object
         res.status(401).json({
             type: 'internal',
-            stage: 'server',
+            stage: 'serverRouting',
             message: `Malformed ID ${req.params.id}`,
             http_status: 401,
             previous: null,
@@ -137,12 +137,14 @@ router.get('/:id/autocomplete', function(req, res) {
         return Promise.all([
             discordServer.getRoles(req.params.id),
             discordServer.getUsers(req.params.id),
+            discordServer.getChannels(req.params.id),
             Promise.resolve(server),
         ]);
     })
-    .then(([roles, users, server]) => {
+    .then(([roles, users, channels, server]) => {
         res.status(200).json({
             roles,
+            channels,
             users: users.map((user) => {
                 return {
                     id: user.id,
@@ -157,11 +159,11 @@ router.get('/:id/autocomplete', function(req, res) {
         });
     })
     .catch((e) => {
-        //TODO: Standardize error object + wrap error object
+        // TODO: Standardize error object + wrap error object
         /* e must be custom */
         res.status(e.http_status).json({
             type: 'internal',
-            stage: 'server',
+            stage: 'serverRouting',
             message: 'Error fetching server\'s autocomplete data',
             http_status: e.http_status,
             previous: e,

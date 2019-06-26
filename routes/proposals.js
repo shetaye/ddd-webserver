@@ -3,7 +3,7 @@ const router = express.Router();
 
 const { dbProposal, dbVote } = require('../db-interface');
 
-const { discordUser, discordServer } = require('../discord-interface');
+const { discordUser, discordServer, resolver } = require('../discord-interface');
 
 const { checkSnowflake } = require('../utils');
 
@@ -44,7 +44,7 @@ router.post('/', function(req, res) {
     if(createdOn > Math.floor(Date.now() / 1000)) {
         res.status(400).json({
             type: 'internal',
-            stage: 'proposal',
+            stage: 'proposalRouting',
             message: 'Invalid created time',
             http_status: 400,
             previous: null,
@@ -54,18 +54,18 @@ router.post('/', function(req, res) {
     if(!name || name.length > 255) {
         res.status(400).json({
             type: 'internal',
-            stage: 'proposal',
+            stage: 'proposalRouting',
             message: 'Invalid name',
             http_status: 400,
             previous: null,
         });
         return;
     }
-    if(actions.length == 0) {
+    if(actions.length == 0 || actions.length > 256) {
         res.status(400).json({
             type: 'internal',
-            stage: 'proposal',
-            message: 'Actions required',
+            stage: 'proposalRouting',
+            message: 'Invalid action count',
             http_status: 400,
             previous: null,
         });
@@ -76,8 +76,8 @@ router.post('/', function(req, res) {
         if(!validActionCodes.includes(actions[i].code)) {
             res.status(400).json({
                 type: 'internal',
-                stage: 'proposal',
-                message: 'Invalid code',
+                stage: 'proposalRouting',
+                message: `Invalid code ${actions[i].code}`,
                 http_status: 400,
                 previous: null,
             });
@@ -87,7 +87,7 @@ router.post('/', function(req, res) {
     if(expiresOn < createdOn) {
         res.status(400).json({
             type: 'internal',
-            stage: 'proposal',
+            stage: 'proposalRouting',
             message: 'Invalid expiry',
             http_status: 400,
             previous: null,
@@ -97,7 +97,7 @@ router.post('/', function(req, res) {
     if(!(checkSnowflake(server) && checkSnowflake(author))) {
         res.status(400).json({
             type: 'internal',
-            stage: 'proposal',
+            stage: 'proposalRouting',
             message: 'Invalid IDs',
             http_status: 400,
             previous: null,
@@ -134,7 +134,7 @@ router.post('/', function(req, res) {
         /* Must be custom */
         res.status(e.http_status ? e.http_status : 500).json({
             type: 'db',
-            stage: 'proposal',
+            stage: 'proposalRouting',
             message: 'Error fetching proposal',
             http_status: e.http_status ? e.http_status : 500,
             previous: null,
@@ -156,20 +156,25 @@ router.get('/:id', function(req, res) {
     dbProposal.getProposal(req.params.id)
     .then((proposal) => {
         /* Boundary check */
+        console.log('checking boundary');
         return checkProposal(proposal, req);
     })
     .then((proposal) => {
-        res.status(200).json(proposal);
+        console.log(proposal);
+        return resolver.resolveActions(proposal);
+    })
+    .then((resolvedProposal) => {
+        res.status(200).json(resolvedProposal);
     })
     .catch((e) => {
         // TODO: Standardize error object + wrap error object
         /* Must be custom */
         res.status(e.http_status ? e.http_status : 500).json({
-            type: 'db',
-            stage: 'proposal',
+            type: 'internal',
+            stage: 'proposalRouting',
             message: 'Error fetching proposal',
             http_status: e.http_status ? e.http_status : 500,
-            previous: null,
+            previous: e,
         });
     });
 });
@@ -207,7 +212,7 @@ router.get('/:id/vote', function(req, res) {
         /* Must be custom */
         res.status(e.http_status ? e.http_status : 500).json({
             type: e.type,
-            stage: 'proposal',
+            stage: 'proposalRouting',
             message: 'Error fetching proposal\'s vote',
             http_status: e.http_status ? e.http_status : 500,
             previous: e,
@@ -264,7 +269,7 @@ router.post('/:id/vote', function(req, res) {
                 // Throw error
                 throw {
                     type: 'internal',
-                    stage: 'proposal',
+                    stage: 'proposalRouting',
                     message: 'Vote required',
                     http_status: 400,
                     previous: null,
@@ -297,7 +302,7 @@ router.post('/:id/vote', function(req, res) {
         /* Must be custom */
         res.status(e.http_status ? e.http_status : 500).json({
             type: e.type,
-            stage: 'proposal',
+            stage: 'proposalRouting',
             message: 'Error updating proposal\'s vote',
             http_status: e.http_status ? e.http_status : 500,
             previous: e,
@@ -336,7 +341,7 @@ router.get('/:id/author', function(req, res) {
         /* Must be custom */
         res.status(e.http_status ? e.http_status : 500).json({
             type: e.type,
-            stage: 'proposal',
+            stage: 'proposalRouting',
             message: 'Error fetching proposal\'s author',
             http_status: e.http_status ? e.http_status : 500,
             previous: null,
@@ -377,7 +382,7 @@ router.get('/:id/server', function(req, res) {
         /* Must be custom */
         res.status(e.http_status ? e.http_status : 500).json({
             type: e.type,
-            stage: 'proposal',
+            stage: 'proposalRouting',
             message: 'Error fetching proposal\'s server',
             http_status: e.http_status ? e.http_status : 500,
             previous: null,

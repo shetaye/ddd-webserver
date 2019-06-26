@@ -38,7 +38,7 @@ router.get('/:id', function(req, res) {
         /* e must be custom */
         res.status(e.http_status).json({
             type: 'internal',
-            stage: 'user',
+            stage: 'userRouting',
             message: 'Error fetching user',
             http_status: 401,
             previous: e,
@@ -58,6 +58,11 @@ router.get('/:id/servers', function(req, res) {
         });
         return;
     }
+    /* Special case for ID 0 (Reuse data) */
+    if(req.params.id == 0) {
+        /* Reuse from auth query */
+        req.params.id = req.currentUser.id;
+    }
     discordUser.getUser(req.params.id)
     .then((user) => {
         return checkUser(user, req);
@@ -72,7 +77,7 @@ router.get('/:id/servers', function(req, res) {
         /* Must be custom */
         res.status(e.http_status).json({
             type: 'internal',
-            stage: 'user',
+            stage: 'userRouting',
             message: 'Error fetching user\'s servers',
             http_status: e.http_status,
             previous: e,
@@ -91,6 +96,11 @@ router.get('/:id/proposals', function(req, res) {
             previous: null,
         });
         return;
+    }
+    /* Special case for ID 0 (Reuse data) */
+    if(req.params.id == 0) {
+        /* Reuse from auth query */
+        req.params.id = req.currentUser.id;
     }
     discordUser.getUser(req.params.id)
     .then((user) => {

@@ -19,7 +19,7 @@ module.exports = {
                 avatar_hash: avatar_hash,
             };
         })
-        //TODO: Add catch that creates standard error object and throws it
+        // TODO: Add catch that creates standard error object and throws it
         .catch((e) => {
             /* Must be axios (directly calling axios) */
             if(!e.response) {

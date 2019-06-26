@@ -9,7 +9,6 @@ module.exports = {
             .andWhere('vote.user_id', uid);
         return vote
         .then((results) => {
-            console.log(results);
             if(results.length == 0 || results[0].vote == 'nv') {
                 return {
                     voted: false,
@@ -21,6 +20,15 @@ module.exports = {
                     vote: results[0].vote,
                 };
             }
+        })
+        .catch(() => {
+            throw {
+                type: 'db',
+                stage: 'voteLookup',
+                message: 'Vote Lookup Error',
+                http_status: 500,
+                previous: null,
+            };
         });
     },
     updateElseInsertVote(id, uid, vote) {
@@ -30,11 +38,9 @@ module.exports = {
             .update({
                 vote: vote.vote,
             });
-        console.log(voteQuery.toSQL().toNative());
         return voteQuery
         .then(results => {
             if(!results) {
-                console.log('Creating since update failed');
                 const insert = db('vote')
                 .where('vote.proposal_id', id)
                 .andWhere('vote.user_id', uid)
@@ -48,6 +54,15 @@ module.exports = {
         })
         .then(results => {
             return results;
+        })
+        .catch(() => {
+            throw {
+                type: 'db',
+                stage: 'voteLookup',
+                message: 'Vote Lookup Error',
+                http_status: 500,
+                previous: null,
+            };
         });
     },
 };

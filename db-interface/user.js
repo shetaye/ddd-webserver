@@ -40,7 +40,7 @@ module.exports = {
             if(actionResults.length == 0) {
                 return Promise.reject({
                     type: 'db',
-                    stage: 'user',
+                    stage: 'userLookup',
                     message: 'User not found',
                     http_status: 404,
                     previous: null,
@@ -76,6 +76,15 @@ module.exports = {
                     };
                 });
             }
+        })
+        .catch((e) => {
+            throw {
+                type: 'db',
+                stage: 'userLookup',
+                message: 'User Lookup Error',
+                http_status: e.http_status ? e.http_status : 500,
+                previous: e.stage && e.message && e.type ? e : null,
+            };
         });
     },
 };

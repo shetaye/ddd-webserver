@@ -36,13 +36,13 @@ module.exports = {
         return Promise.all([action, vote])
         .then(([actionResults, voteResults]) => {
             if(actionResults.length == 0) {
-                return Promise.reject({
+                throw {
                     type: 'db',
-                    stage: 'proposal',
+                    stage: 'proposalLookup',
                     message: 'Proposal not found',
                     http_status: 404,
                     previous: null,
-                });
+                };
             }
             else {
                 /* Really could be voteResults too... */
@@ -69,6 +69,15 @@ module.exports = {
                     votes: [proposalVote.y ? parseInt(proposalVote.y) : 0, proposalVote.n ? parseInt(proposalVote.n) : 0],
                 };
             }
+        })
+        .catch((e) => {
+            throw {
+                type: 'db',
+                stage: 'proposalLookup',
+                message: 'Proposal Lookup Error',
+                http_status: e.http_status ? e.http_status : 500,
+                previous: e.stage && e.message && e.type ? e : null,
+            };
         });
     },
     insertNewProposal(proposal) {
@@ -99,6 +108,15 @@ module.exports = {
         })
         .then(() => {
             return proposal;
+        })
+        .catch((e) => {
+            throw {
+                type: 'db',
+                stage: 'proposalInsertion',
+                message: 'Proposal Insertion Error',
+                http_status: e.http_status ? e.http_status : 500,
+                previous: e.stage && e.message && e.type ? e : null,
+            };
         });
     },
 };

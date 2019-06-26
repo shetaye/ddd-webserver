@@ -58,9 +58,17 @@ The Discord Gateway is always running and has a gateway connection to Discord
     * /servers/:id/autocomplete - Monolithic autocomplete object
     * Other things like action names can be hardcoded
     * These endpoints would really only provide basic ID and display info (ID + name is most important)
+* Minor fixes
+    * Have liveupdate either not update the entire proposal or send a resolved proposal
+    * Add description to proposals
+* Finish autocomplete
+    * User autocompletes (/users/autocomplete)
+    * Channel autocompletes (part of server)
+    * Role autocompletes (part of server)
 * Publish proposals
     * New backend POST endpoint
     * Wizard to create proposals
+    * Backend validation of action parameters
 * Edit proposals
     * New backend PATCH/PUT endpoint
     * New backend DELETE endpoint

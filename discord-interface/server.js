@@ -162,11 +162,58 @@ module.exports = {
                 throw {
                     type: 'axios',
                     stage: 'server',
-                    message: 'Gateway error while fetching members',
+                    message: 'Gateway error while fetching roles',
                     http_status: 500,
                     previous: e.data,
                 };
             }
         });
-    }
+    },
+    getChannels(id) {
+        return api.gateway.request({
+            url: `/servers/${id}/channels`,
+        }).then((result) => {
+            return result.data;
+        })
+        // TODO: Add catch that creates standard error object and throws it
+        .catch((e) => {
+            /* Must be axios (directly calling axios) */
+            if(!e.response) {
+                throw {
+                    type: 'axios',
+                    stage: 'server',
+                    message: 'Error while calling endpoint',
+                    http_status: 500,
+                    previous: null,
+                };
+            }
+            if(e.response.status == 404) {
+                throw {
+                    type: 'axios',
+                    stage: 'server',
+                    message: 'Server not found or unavailable',
+                    http_status: e.response.status,
+                    previous: e.data,
+                };
+            }
+            if(e.response.status == 401) {
+                throw {
+                    type: 'axios',
+                    stage: 'server',
+                    message: 'Malformed input',
+                    http_status: e.response.status,
+                    previous: e.data,
+                };
+            }
+            if(e.response.status == 500) {
+                throw {
+                    type: 'axios',
+                    stage: 'server',
+                    message: 'Gateway error while fetching channels',
+                    http_status: 500,
+                    previous: e.data,
+                };
+            }
+        });
+    },
 };

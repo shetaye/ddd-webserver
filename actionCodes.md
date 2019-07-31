@@ -1,63 +1,81 @@
 These codes are returned with an action
 # User Moderation
 ## 1000 - Kick
-`Format`: US
 `p1`: user id\
 `p2`: reason\
 `p3`: *
 ## 1001 - Ban
-`Format`: US
 `p1`: user id\
 `p2`: reason\
 `p3`: *
 # Role Management
 ## 2000 - Add role
-`Format`: RS
 `p1`: role name\
 `p2`: *
 `p3`: *
-## 2001 - Modify role permissions
-`Format`: RPV
+## 2001 - Set role permission to 'allow'
 `p1`: role id\
 `p2`: role permission\
-`p3`: new value
-## 2002 - Modify role settings
-`Format`: RSV
+`p3`: *
+## 2002 - Set role permission to 'prohibit'
+`p1`: role id\
+`p2`: role permission\
+`p3`: *
+## 2003 - Turn role setting on
 `p1`: role id\
 `p2`: role setting\
-`p3`: new value
-## 2003 - Remove role
-`Format`: R
+`p3`: *
+## 2004 - Turn role setting off
+`p1`: role id\
+`p2`: role setting\
+`p3`: *
+## 2005 - Move role position
+`p1`: role id\
+`p2`: position
+`p3`: *
+## 2006 - Remove role
 `p1`: role id\
 `p2`: *\
 `p3`: *
-## 2004 - Add user to role
-`Format`: RU
+## 2007 - Add user to role
 `p1`: role id\
 `p2`: user id\
 `p3`: *
-## 2005 - Remove user from role
-`Format`: RU
+## 2008 - Remove user from role
 `p1`: role id\
 `p2`: user id\
 `p3`: *
 # Channel Mangement
 ## 3000 - Add channel
-`Format`: CS
 `p1`: channel name\
 `p2`: *
 `p3`: *
 ## 3001 - Remove channel
-`Format`: C
 `p1`: channel id\
 `p2`: *\
 `p3`: *
-## 3002 - Modify channel permissions
+## 3002 - Set channel override 'prohibit'
+`p1`: channel id\
+`p2`: role id\
+`p3`: channel permission\
+## 3003 - Set channel override 'role default'
+`p1`: channel id\
+`p2`: role id\
+`p3`: channel permission\
+## 3004 - Set channel override 'allow'
+`p1`: channel id\
+`p2`: role id\
+`p3`: channel permission\
+## 3005 - Move channel override's position
+`p1`: channel id\
+`p2`: role id\
+`p3`: position
+## 3006 - Remove channel override
 `Format`: CPV
 `p1`: channel id\
-`p2`: channel permission\
-`p3`: new value
-## 3003 - Modify channel settings
+`p2`: role id\
+`p3`: *
+## 3007 - Modify channel settings
 `Format`: CSV
 `p1`: channel id\
 `p2`: channel setting\

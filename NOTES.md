@@ -69,6 +69,9 @@ The Discord Gateway is always running and has a gateway connection to Discord
     * New backend POST endpoint
     * Wizard to create proposals
     * Backend validation of action parameters
+* Servers
+    * Server settings
+    * Server 'initialization' phase where you can't do anything until the *owner* initialises the server with basic info
 * Edit proposals
     * New backend PATCH/PUT endpoint
     * New backend DELETE endpoint
@@ -83,11 +86,6 @@ The Discord Gateway is always running and has a gateway connection to Discord
     * Finish all TODOs
     *   * Reinforce auth state usage
     *   * Trim excess code errors + TS
-## Real actions and server sttings
-* Server and Proposal Properties
-    * Add new table columns and DB methods
-    * Add new endpoint (or actually fill out PATCH /servers/:id)
-    * Add UI elements to handle setting changes
 
 
 # Milestones
@@ -98,3 +96,4 @@ The Discord Gateway is always running and has a gateway connection to Discord
 * Server sttings and actions executing
 * Dashboard
 * Release
+* Mobile app support through Firebase switch

@@ -28,18 +28,45 @@ exports.seed = function(knex, Promise) {
         '339838865370120192', /* URC */
     ];
     const actionCodes = {
+        // Kick
         1000: [ randomFrom(Object.keys(userIDs)), 'Stupid kick reason', null ],
+        // Ban
         1001: [ randomFrom(Object.keys(userIDs)), 'Stupid ban reason', null ],
+        // Add role
         2000: [ 'A new role', null, null ],
-        2001: [ randomFrom(roleIDs), 'rolePermissionWIP', 'roleValueWIP' ],
-        2002: [ randomFrom(roleIDs), 'roleSettingWIP', 'roleValueWIP' ],
-        2003: [ randomFrom(roleIDs), null, null ],
-        2004: [ randomFrom(roleIDs), randomFrom(Object.keys(userIDs)), null ],
-        2005: [ randomFrom(roleIDs), randomFrom(Object.keys(userIDs)), null ],
+        // Set role permission to 'allow'
+        2001: [ randomFrom(roleIDs), 'rolePermissionWIP', null ],
+        // Set role permission to 'prohibit'
+        2002: [ randomFrom(roleIDs), 'rolePermissionWIP', null ],
+        // Turn role setting 'on'
+        2003: [ randomFrom(roleIDs), 'roleSettingWIP', null ],
+        // Turn role setting 'off'
+        2004: [ randomFrom(roleIDs), 'roleSettingWIP', null ],
+        // Move role position
+        2005: [ randomFrom(roleIDs), 4, null ],
+        // Remove role
+        2006: [ randomFrom(roleIDs), null, null ],
+        // Add user to role
+        2007: [ randomFrom(roleIDs), randomFrom(Object.keys(userIDs)), null ],
+        // Remove user from role
+        2008: [ randomFrom(roleIDs), randomFrom(Object.keys(userIDs)), null ],
+        // Add channel
         3000: [ 'A new channel', null, null ],
+        // Remove channel
         3001: [ randomFrom(channelIDs), null, null ],
-        3002: [ randomFrom(channelIDs), 'channelPermissionWIP', 'channelValueWIP' ],
-        3003: [ randomFrom(channelIDs), 'channelSettingWIP', 'channelValueWIP' ],
+        // Set channel override to 'prohibit'
+        3002: [ randomFrom(channelIDs), randomFrom(roleIDs), 'channelPermissionWIP' ],
+        // Set channel override to 'role default'
+        3003: [ randomFrom(channelIDs), randomFrom(roleIDs), 'channelPermissionWIP' ],
+        // Set channel override to 'allow'
+        3004: [ randomFrom(channelIDs), randomFrom(roleIDs), 'channelPermissionWIP' ],
+        // Move channel override's position
+        3005: [ randomFrom(channelIDs), randomFrom(roleIDs), 4 ],
+        // Remove channel override
+        3006: [ randomFrom(channelIDs), randomFrom(roleIDs), null ],
+        // Modify channel settings
+        3007: [ randomFrom(channelIDs), 'channelSettingWIP', 'channelSettingValueWIP' ],
+        // Change server settings
         4000: [ 'serverSettingWIP', 'serverValueWIP', null ],
     };
     const proposals = [];

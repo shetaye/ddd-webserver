@@ -18,6 +18,7 @@ module.exports = {
         });
     },
     resolveRole(roleid, serverid) {
+        console.log(`${roleid} on ${serverid}`);
         return discordServer.getRoles(serverid)
         .then((roles) => {
             // Get the first role that matches the RoleID
@@ -89,6 +90,7 @@ module.exports = {
                     promise = Promise.resolve(action);
                     break;
                 case 2001:
+                case 2002:
                     promise = Promise.all([
                         this.resolveRole(action.p0, server),
                         this.resolveRolePermission(action.p1),
@@ -99,10 +101,12 @@ module.exports = {
                             p0: role,
                             p1: permission,
                             p2: action.p2,
+                            position: action.position,
                         };
                     });
                     break;
-                case 2002:
+                case 2003:
+                case 2004:
                     promise = Promise.all([
                         this.resolveRole(action.p0, server),
                         this.resolveRoleSetting(action.p1),
@@ -113,10 +117,11 @@ module.exports = {
                             p0: role,
                             p1: setting,
                             p2: action.p2,
+                            position: action.position,
                         };
                     });
                     break;
-                case 2003:
+                case 2005:
                     promise = this.resolveRole(action.p0, server)
                     .then((role) => {
                         return {
@@ -124,11 +129,24 @@ module.exports = {
                             p0: role,
                             p1: action.p1,
                             p2: action.p2,
+                            position: action.position,
                         };
                     });
                     break;
-                case 2004:
-                case 2005:
+                case 2006:
+                    promise = this.resolveRole(action.p0, server)
+                    .then((role) => {
+                        return {
+                            code: action.code,
+                            p0: role,
+                            p1: action.p1,
+                            p2: action.p2,
+                            position: action.position,
+                        };
+                    });
+                    break;
+                case 2007:
+                case 2008:
                     promise = Promise.all([
                         this.resolveRole(action.p0, server),
                         this.resolveUser(action.p1),
@@ -139,6 +157,7 @@ module.exports = {
                             p0: role,
                             p1: user,
                             p2: action.p2,
+                            position: action.position,
                         };
                     });
                     break;
@@ -153,24 +172,59 @@ module.exports = {
                             p0: channel,
                             p1: action.p1,
                             p2: action.p2,
+                            position: action.position,
                         };
                     });
                     break;
                 case 3002:
+                case 3003:
+                case 3004:
                     promise = Promise.all([
                         this.resolveChannel(action.p0, server),
-                        this.resolveChannelPermission(action.p1),
+                        this.resolveRole(action.p1, server),
+                        this.resolveChannelPermission(action.p2),
                     ])
-                    .then(([channel, permission]) => {
+                    .then(([channel, role, permission]) => {
                         return {
                             code: action.code,
                             p0: channel,
-                            p1: permission,
-                            p2: action.p2,
+                            p1: role,
+                            p2: permission,
+                            position: action.position,
                         };
                     });
                     break;
-                case 3003:
+                case 3005:
+                    promise = Promise.all([
+                        this.resolveChannel(action.p0, server),
+                        this.resolveRole(action.p1, server),
+                    ])
+                    .then(([channel, role]) => {
+                        return {
+                            code: action.code,
+                            p0: channel,
+                            p1: role,
+                            p2: action.p2,
+                            position: action.position,
+                        };
+                    });
+                    break;
+                case 3006:
+                    promise = Promise.all([
+                        this.resolveChannel(action.p0, server),
+                        this.resolveRole(action.p1, server),
+                    ])
+                    .then(([channel, role]) => {
+                        return {
+                            code: action.code,
+                            p0: channel,
+                            p1: role,
+                            p2: action.p2,
+                            position: action.position,
+                        };
+                    });
+                    break;
+                case 3007:
                     promise = Promise.all([
                         this.resolveChannel(action.p0, server),
                         this.resolveChannelSetting(action.p1),
@@ -181,6 +235,7 @@ module.exports = {
                             p0: channel,
                             p1: setting,
                             p2: action.p2,
+                            position: action.position,
                         };
                     });
                     break;
@@ -192,6 +247,7 @@ module.exports = {
                             p0: setting,
                             p1: action.p1,
                             p2: action.p2,
+                            position: action.position,
                         };
                     });
                     break;

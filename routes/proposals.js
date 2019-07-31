@@ -156,11 +156,9 @@ router.get('/:id', function(req, res) {
     dbProposal.getProposal(req.params.id)
     .then((proposal) => {
         /* Boundary check */
-        console.log('checking boundary');
         return checkProposal(proposal, req);
     })
     .then((proposal) => {
-        console.log(proposal);
         return resolver.resolveActions(proposal);
     })
     .then((resolvedProposal) => {

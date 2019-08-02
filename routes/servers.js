@@ -9,6 +9,8 @@ const { dbServer } = require('../db-interface');
 
 const { checkServer } = require('../boundary-checks');
 
+const { resolver } = require('../discord-interface');
+
 router.get('/:id', function(req, res, next) {
     if(!checkSnowflake(req.params.id)) {
         //TODO: Standardize error object + wrap error object
@@ -166,6 +168,43 @@ router.get('/:id/autocomplete', function(req, res) {
             stage: 'serverRouting',
             message: 'Error fetching server\'s autocomplete data',
             http_status: e.http_status,
+            previous: e,
+        });
+    });
+});
+
+router.get('/:id/resolveActions', function(req, res) {
+    // TODO: Check that actions are valid and server exists
+    // TODO: Add boundary checks
+
+    if(!checkSnowflake(req.params.id)) {
+        // TODO: Standardize error object + wrap error object
+        res.status(401).json({
+            type: 'internal',
+            stage: 'serverRouting',
+            message: `Malformed ID ${req.params.id}`,
+            http_status: 401,
+            previous: null,
+        });
+        return;
+    }
+    discordServer.getServer(req.params.id)
+    .then((server) => {
+        /* Boundary check */
+        return checkServer(server, req);
+    })
+    .then((server) => {
+        return resolver.resolveActions(req.body, server.id);
+    })
+    .then((actions) => {
+        res.status(200).json(actions);
+    })
+    .catch((e) => {
+        res.status(500).json({
+            type: 'internal',
+            stage: 'serverRouting',
+            message: 'Error resolving actions',
+            http_status: 500,
             previous: e,
         });
     });

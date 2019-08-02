@@ -65,17 +65,13 @@ module.exports = {
     resolveServerSetting(serverSetting) {
         return Promise.resolve(serverSetting);
     },
-    resolveActions(proposal) {
-        const unresolvedActions = proposal.actions;
-        const resolvedActions = [];
+    resolveProposal(proposal) {
         const server = proposal.server;
-        for(let i = 0; i < unresolvedActions.length; i++) {
-            const action = unresolvedActions[i];
-            let promise;
+        const promises = proposal.actions.map((action) => {
             switch (action.code) {
                 case 1000:
                 case 1001:
-                    promise = this.resolveUser(action.p0)
+                    return this.resolveUser(action.p0)
                     .then((user) => {
                         return {
                             code: action.code,
@@ -85,13 +81,11 @@ module.exports = {
                             position: action.position,
                         };
                     });
-                    break;
                 case 2000:
-                    promise = Promise.resolve(action);
-                    break;
+                    return Promise.resolve(action);
                 case 2001:
                 case 2002:
-                    promise = Promise.all([
+                    return Promise.all([
                         this.resolveRole(action.p0, server),
                         this.resolveRolePermission(action.p1),
                     ])
@@ -104,10 +98,9 @@ module.exports = {
                             position: action.position,
                         };
                     });
-                    break;
                 case 2003:
                 case 2004:
-                    promise = Promise.all([
+                    return Promise.all([
                         this.resolveRole(action.p0, server),
                         this.resolveRoleSetting(action.p1),
                     ])
@@ -120,9 +113,8 @@ module.exports = {
                             position: action.position,
                         };
                     });
-                    break;
                 case 2005:
-                    promise = this.resolveRole(action.p0, server)
+                    return this.resolveRole(action.p0, server)
                     .then((role) => {
                         return {
                             code: action.code,
@@ -132,9 +124,8 @@ module.exports = {
                             position: action.position,
                         };
                     });
-                    break;
                 case 2006:
-                    promise = this.resolveRole(action.p0, server)
+                    return this.resolveRole(action.p0, server)
                     .then((role) => {
                         return {
                             code: action.code,
@@ -144,10 +135,9 @@ module.exports = {
                             position: action.position,
                         };
                     });
-                    break;
                 case 2007:
                 case 2008:
-                    promise = Promise.all([
+                    return Promise.all([
                         this.resolveRole(action.p0, server),
                         this.resolveUser(action.p1),
                     ])
@@ -160,12 +150,10 @@ module.exports = {
                             position: action.position,
                         };
                     });
-                    break;
                 case 3000:
-                    promise = Promise.resolve(action);
-                    break;
+                    return Promise.resolve(action);
                 case 3001:
-                    promise = this.resolveChannel(action.p0, server)
+                    return this.resolveChannel(action.p0, server)
                     .then((channel) => {
                         return {
                             code: action.code,
@@ -175,11 +163,10 @@ module.exports = {
                             position: action.position,
                         };
                     });
-                    break;
                 case 3002:
                 case 3003:
                 case 3004:
-                    promise = Promise.all([
+                    return Promise.all([
                         this.resolveChannel(action.p0, server),
                         this.resolveRole(action.p1, server),
                         this.resolveChannelPermission(action.p2),
@@ -193,9 +180,8 @@ module.exports = {
                             position: action.position,
                         };
                     });
-                    break;
                 case 3005:
-                    promise = Promise.all([
+                    return Promise.all([
                         this.resolveChannel(action.p0, server),
                         this.resolveRole(action.p1, server),
                     ])
@@ -208,9 +194,8 @@ module.exports = {
                             position: action.position,
                         };
                     });
-                    break;
                 case 3006:
-                    promise = Promise.all([
+                    return Promise.all([
                         this.resolveChannel(action.p0, server),
                         this.resolveRole(action.p1, server),
                     ])
@@ -223,9 +208,8 @@ module.exports = {
                             position: action.position,
                         };
                     });
-                    break;
                 case 3007:
-                    promise = Promise.all([
+                    return Promise.all([
                         this.resolveChannel(action.p0, server),
                         this.resolveChannelSetting(action.p1),
                     ])
@@ -238,9 +222,8 @@ module.exports = {
                             position: action.position,
                         };
                     });
-                    break;
                 case 4000:
-                    promise = this.resolveServerSetting(action.p0)
+                    return this.resolveServerSetting(action.p0)
                     .then((setting) => {
                         return {
                             code: action.code,
@@ -250,19 +233,197 @@ module.exports = {
                             position: action.position,
                         };
                     });
-                    break;
             }
-            resolvedActions.push(promise);
-        }
-        return Promise.all(resolvedActions)
-        .then((completedPromises) => {
-            proposal.actions = completedPromises;
+        });
+        return Promise.all(promises)
+        .then((newActions) => {
+            proposal.actions = newActions;
             return proposal;
         })
         .catch((e) => {
             throw {
                 type: 'internal',
                 stage: 'proposalResolution',
+                message: 'Internal error',
+                http_status: 500,
+                previous: e,
+            };
+        });
+    },
+    resolveActions(actions, server) {
+        const resolvedActions = actions.map((action) => {
+            switch (action.code) {
+                case 1000:
+                case 1001:
+                    return this.resolveUser(action.p0)
+                    .then((user) => {
+                        return {
+                            code: action.code,
+                            p0: user,
+                            p1: action.p1,
+                            p2: action.p2,
+                            position: action.position,
+                        };
+                    });
+                case 2000:
+                    return Promise.resolve(action);
+                case 2001:
+                case 2002:
+                    return Promise.all([
+                        this.resolveRole(action.p0, server),
+                        this.resolveRolePermission(action.p1),
+                    ])
+                    .then(([role, permission]) => {
+                        return {
+                            code: action.code,
+                            p0: role,
+                            p1: permission,
+                            p2: action.p2,
+                            position: action.position,
+                        };
+                    });
+                case 2003:
+                case 2004:
+                    return Promise.all([
+                        this.resolveRole(action.p0, server),
+                        this.resolveRoleSetting(action.p1),
+                    ])
+                    .then(([role, setting]) => {
+                        return {
+                            code: action.code,
+                            p0: role,
+                            p1: setting,
+                            p2: action.p2,
+                            position: action.position,
+                        };
+                    });
+                case 2005:
+                    return this.resolveRole(action.p0, server)
+                    .then((role) => {
+                        return {
+                            code: action.code,
+                            p0: role,
+                            p1: action.p1,
+                            p2: action.p2,
+                            position: action.position,
+                        };
+                    });
+                case 2006:
+                    return this.resolveRole(action.p0, server)
+                    .then((role) => {
+                        return {
+                            code: action.code,
+                            p0: role,
+                            p1: action.p1,
+                            p2: action.p2,
+                            position: action.position,
+                        };
+                    });
+                case 2007:
+                case 2008:
+                    return Promise.all([
+                        this.resolveRole(action.p0, server),
+                        this.resolveUser(action.p1),
+                    ])
+                    .then(([role, user]) => {
+                        return {
+                            code: action.code,
+                            p0: role,
+                            p1: user,
+                            p2: action.p2,
+                            position: action.position,
+                        };
+                    });
+                case 3000:
+                    return Promise.resolve(action);
+                case 3001:
+                    return this.resolveChannel(action.p0, server)
+                    .then((channel) => {
+                        return {
+                            code: action.code,
+                            p0: channel,
+                            p1: action.p1,
+                            p2: action.p2,
+                            position: action.position,
+                        };
+                    });
+                case 3002:
+                case 3003:
+                case 3004:
+                    return Promise.all([
+                        this.resolveChannel(action.p0, server),
+                        this.resolveRole(action.p1, server),
+                        this.resolveChannelPermission(action.p2),
+                    ])
+                    .then(([channel, role, permission]) => {
+                        return {
+                            code: action.code,
+                            p0: channel,
+                            p1: role,
+                            p2: permission,
+                            position: action.position,
+                        };
+                    });
+                case 3005:
+                    return Promise.all([
+                        this.resolveChannel(action.p0, server),
+                        this.resolveRole(action.p1, server),
+                    ])
+                    .then(([channel, role]) => {
+                        return {
+                            code: action.code,
+                            p0: channel,
+                            p1: role,
+                            p2: action.p2,
+                            position: action.position,
+                        };
+                    });
+                case 3006:
+                    return Promise.all([
+                        this.resolveChannel(action.p0, server),
+                        this.resolveRole(action.p1, server),
+                    ])
+                    .then(([channel, role]) => {
+                        return {
+                            code: action.code,
+                            p0: channel,
+                            p1: role,
+                            p2: action.p2,
+                            position: action.position,
+                        };
+                    });
+                case 3007:
+                    return Promise.all([
+                        this.resolveChannel(action.p0, server),
+                        this.resolveChannelSetting(action.p1),
+                    ])
+                    .then(([channel, setting]) => {
+                        return {
+                            code: action.code,
+                            p0: channel,
+                            p1: setting,
+                            p2: action.p2,
+                            position: action.position,
+                        };
+                    });
+                case 4000:
+                    return this.resolveServerSetting(action.p0)
+                    .then((setting) => {
+                        return {
+                            code: action.code,
+                            p0: setting,
+                            p1: action.p1,
+                            p2: action.p2,
+                            position: action.position,
+                        };
+                    });
+            }
+        });
+        return Promise.all(resolvedActions)
+        .catch((e) => {
+            throw {
+                type: 'internal',
+                stage: 'actionResolution',
                 message: 'Internal error',
                 http_status: 500,
                 previous: e,

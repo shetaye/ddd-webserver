@@ -159,7 +159,7 @@ router.get('/:id', function(req, res) {
         return checkProposal(proposal, req);
     })
     .then((proposal) => {
-        return resolver.resolveActions(proposal);
+        return resolver.resolveProposal(proposal);
     })
     .then((resolvedProposal) => {
         res.status(200).json(resolvedProposal);

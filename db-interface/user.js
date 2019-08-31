@@ -2,6 +2,37 @@ const db = require('./db');
 
 module.exports = {
     getProposals(id) {
+        console.log(id);
+        const proposals = db.collection('proposals').where('author', '==', id);
+        return proposals.get().then((proposalsSnapshot) => {
+            console.log('a');
+            return proposalsSnapshot.docs.map((doc) => {
+                const proposal = doc.data();
+                return {
+                    id: doc.id,
+                    status: proposal.status,
+                    author: proposal.author,
+                    server: proposal.server,
+                    name: proposal.name,
+                };
+            });
+        })
+        .catch((e) => {
+            console.log(e);
+            throw {
+                type: 'db',
+                stage: 'userGet',
+                message: 'User Proposal Lookup Error',
+                http_status: 500,
+                previous: null,
+            };
+        });
+    },
+};
+
+/*
+module.exports = {
+    getProposals(id) {
         const action = db('proposal')
             .select(
                 'proposal.proposal_id',
@@ -47,8 +78,6 @@ module.exports = {
                 });
             }
             else {
-                /* Really could be voteResults too... */
-                /* Since we have multiple rows, we have to expand into a 2d array */
                 const actionHash = actionResults.reduce((hash, row) => {
                     if(!hash.hasOwnProperty(row.proposal_id)) {
                         hash[row.proposal_id] = [];
@@ -88,3 +117,4 @@ module.exports = {
         });
     },
 };
+*/

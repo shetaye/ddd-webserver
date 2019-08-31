@@ -153,8 +153,11 @@ router.get('/:id', function(req, res) {
         });
         return;
     }
+    console.log(req.params.id);
     dbProposal.getProposal(req.params.id)
     .then((proposal) => {
+        console.log('Received proposal: ');
+        console.log(proposal);
         /* Boundary check */
         return checkProposal(proposal, req);
     })
@@ -217,7 +220,124 @@ router.get('/:id/vote', function(req, res) {
         });
     });
 });
-// Maybe split out into a DELETE function
+// Delete preexisting vote
+router.delete('/:id/vote', function(req, res) {
+    if(!checkSnowflake(req.params.id)) {
+        // TODO: Standardize error object + wrap error object
+        res.status(401).json({
+            type: 'internal',
+            stage: 'server',
+            message: `Malformed ID ${req.params.id}`,
+            http_status: 401,
+            previous: null,
+        });
+        return;
+    }
+    dbProposal.getProposal(req.params.id)
+    .then((proposal) => {
+        /* Boundary check */
+        // I can re use the boundary check
+        // because you can vote on every proposal
+        // you can see and you can see
+        // every proposal you can vote on.
+        // In other words, 1:1 boundary
+        return checkProposal(proposal, req);
+    })
+    .then(() => {
+        return dbVote.removeVote(req.params.id, req.currentUser.id);
+    })
+    .then(() => {
+        return dbProposal.getProposal(req.params.id);
+    })
+    .then(proposal => {
+        // Push out new vote info
+        // Signal refetch
+        // Refetch should also reach the original sender
+        live.sendEventTo('proposal', proposal.id, 'refetchProposal');
+        live.sendEventTo('proposal', proposal.id, 'refetchProposalVote');
+        // I send the proposal back for speed, but not the now deleted vote
+        res.status(200).json({
+            proposal: proposal,
+            vote: { voted: false },
+        });
+    })
+    .catch((e) => {
+        // TODO: Standardize error object + wrap error object
+        /* Must be custom */
+        res.status(e.http_status ? e.http_status : 500).json({
+            type: e.type,
+            stage: 'proposalRouting',
+            message: 'Error deleting proposal\'s vote',
+            http_status: e.http_status ? e.http_status : 500,
+            previous: e,
+        });
+    });
+});
+// Update prexisting vote
+router.patch('/:id/vote', function(req, res) {
+    if(!checkSnowflake(req.params.id)) {
+        // TODO: Standardize error object + wrap error object
+        res.status(401).json({
+            type: 'internal',
+            stage: 'server',
+            message: `Malformed ID ${req.params.id}`,
+            http_status: 401,
+            previous: null,
+        });
+        return;
+    }
+    if(!req.body.vote) {
+        // TODO: Standardize error object + wrap error object
+        res.status(400).json({
+            type: 'internal',
+            stage: 'server',
+            message: `Malformed vote ${req.body.vote}`,
+            http_status: 400,
+            previous: null,
+        });
+        return;
+    }
+    dbProposal.getProposal(req.params.id)
+    .then((proposal) => {
+        /* Boundary check */
+        // I can re use the boundary check
+        // because you can vote on every proposal
+        // you can see and you can see
+        // every proposal you can vote on.
+        // In other words, 1:1 boundary
+        return checkProposal(proposal, req);
+    })
+    .then(() => {
+        return dbVote.updateVote(req.params.id, req.currentUser.id, req.body.vote.vote == 'y' ? 'y' : 'n');
+    })
+    .then(() => {
+        return dbProposal.getProposal(req.params.id);
+    })
+    .then(proposal => {
+        // Push out new vote info
+        // Signal refetch
+        // Refetch should also reach the original sender
+        live.sendEventTo('proposal', proposal.id, 'refetchProposal');
+        live.sendEventTo('proposal', proposal.id, 'refetchProposalVote');
+        // I send the proposal back for speed, but not the now deleted vote
+        res.status(200).json({
+            proposal: proposal,
+            vote: req.body.vote,
+        });
+    })
+    .catch((e) => {
+        // TODO: Standardize error object + wrap error object
+        /* Must be custom */
+        res.status(e.http_status ? e.http_status : 500).json({
+            type: e.type,
+            stage: 'proposalRouting',
+            message: 'Error updating proposal\'s vote',
+            http_status: e.http_status ? e.http_status : 500,
+            previous: e,
+        });
+    });
+});
+// Create new vote
 router.post('/:id/vote', function(req, res) {
     if(!checkSnowflake(req.params.id)) {
         // TODO: Standardize error object + wrap error object
@@ -252,33 +372,9 @@ router.post('/:id/vote', function(req, res) {
         return checkProposal(proposal, req);
     })
     .then(() => {
-        const vote = req.body.vote;
-        const user_id = req.currentUser.id;
-        if(!vote.voted) {
-            // Delete the vote row if it exists else return
-            return dbVote.updateElseInsertVote(req.params.id, user_id, {
-                voted: false,
-                vote: 'nv',
-            });
-        }
-        else {
-            // Try to update row else create row
-            if(!req.body.vote.vote) {
-                // Throw error
-                throw {
-                    type: 'internal',
-                    stage: 'proposalRouting',
-                    message: 'Vote required',
-                    http_status: 400,
-                    previous: null,
-                };
-            }
-            return dbVote.updateElseInsertVote(req.params.id, user_id, vote);
-        }
+        return dbVote.createVote(req.params.id, req.currentUser.id, req.body.vote.vote == 'y' ? 'y' : 'n');
     })
-    // TODO: Here, check vote and update if valid
     .then(() => {
-        // Return updated proposal (Do a requery)
         return dbProposal.getProposal(req.params.id);
     })
     .then(proposal => {
@@ -301,7 +397,7 @@ router.post('/:id/vote', function(req, res) {
         res.status(e.http_status ? e.http_status : 500).json({
             type: e.type,
             stage: 'proposalRouting',
-            message: 'Error updating proposal\'s vote',
+            message: 'Error creating proposal\'s vote',
             http_status: e.http_status ? e.http_status : 500,
             previous: e,
         });

@@ -110,12 +110,13 @@ router.get('/:id/proposals', function(req, res) {
         return dbUser.getProposals(req.params.id);
     })
     .then((proposals) => {
+        console.log(req.params.id);
         res.status(200).json(proposals);
     })
     .catch((e) => {
         // TODO: Standardize error object + wrap error object
         /* Must be custom */
-        res.status(e.http_status).json({
+        res.status(500).json({
             type: 'internal',
             stage: 'server',
             message: 'Error fetching user\'s proposals',

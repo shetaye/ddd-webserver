@@ -2,6 +2,71 @@ const db = require('./db');
 
 module.exports = {
     getVote(id, uid) {
+        const votes = db.collection('proposals').doc(id).collection('votes').doc(uid);
+        return votes.get().then((docSnap) => {
+            if(!docSnap.exists) {
+                return {
+                    voted: false,
+                };
+            }
+            return {
+                voted: true,
+                vote: docSnap.data().voteYes ? 'y' : 'n',
+            };
+        })
+        .catch((e) => {
+            throw {
+                type: 'db',
+                stage: 'voteGet',
+                message: 'Vote Lookup Error',
+                http_status: 500,
+                previous: null,
+            };
+        });
+    },
+    removeVote(id, uid) {
+        const vote = db.collection('proposals').doc(id).collection('votes').doc(uid);
+        return vote.delete()
+        .catch((e) => {
+            throw {
+                type: 'db',
+                stage: 'voteDelete',
+                message: 'Vote Deletion Error',
+                http_status: 500,
+                previous: null
+            };
+        });
+    },
+    createVote(id, uid, vote) {
+        const voteDoc = db.collection('proposals').doc(id).collection('votes').doc(uid);
+        return voteDoc.create({ voteYes: vote == 'y' })
+        .catch((e) => {
+            throw {
+                type: 'db',
+                stage: 'voteCreate',
+                message: 'Vote Creation Error (Vote may already exist)',
+                http_status: 500,
+                previous: null,
+            };
+        });
+    },
+    updateVote(id, uid, vote) {
+        const voteDoc = db.collection('proposals').doc(id).collection('votes').doc(uid);
+        return voteDoc.update({ voteYes: vote == 'y' })
+        .catch((e) => {
+            throw {
+                type: 'db',
+                stage: 'voteUpdate',
+                message: 'Vote Update Error (Vote may not exist)',
+                http_status: 500,
+                previous: null,
+            };
+        });
+    },
+};
+/*
+module.exports = {
+    getVote(id, uid) {
         const vote = db('vote')
             .select('vote.user_id',
                     'vote.vote')
@@ -66,3 +131,4 @@ module.exports = {
         });
     },
 };
+*/

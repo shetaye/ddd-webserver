@@ -9,6 +9,7 @@ yarn-error.log*
 
 # Super secret auth data
 config.json
+keyfile.json
 
 # Runtime data
 pids

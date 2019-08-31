@@ -3,6 +3,101 @@ const { generateSnowflake } = require('../utils');
 
 module.exports = {
     getProposal(id) {
+        // Get proposal
+        const proposal = db.collection('proposals').doc(id);
+        const proposalData = proposal.get().then((proposalDoc) => {
+            if(!proposalDoc.exists) {
+                throw {
+                    type: 'db',
+                    stage: 'proposalLookup',
+                    message: 'Proposal not found',
+                    http_status: 404,
+                    previous: null,
+                };
+            }
+            return proposalDoc.data();
+        });
+        // Get vote data
+        const votes = proposal.collection('votes');
+        const voteNo = votes.where('voteYes', '==', false).get();
+        const voteYes = votes.where('voteYes', '==', true).get();
+        const voteData = Promise.all([voteNo, voteYes])
+        .then(([votesNoSnapshot, votesYesSnapshot]) => {
+            let no = 0;
+            let yes = 0;
+            if(!votesNoSnapshot.empty) { no = votesNoSnapshot.size; }
+            if(!votesYesSnapshot.empty) { yes = votesYesSnapshot.size; }
+            return { no, yes };
+        });
+        // Get action data
+        const actions = proposal.collection('actions');
+        const actionData = actions.get().then((snapshot) => {
+            return snapshot.docs.map((action) => {
+                return action.data();
+            });
+        });
+        // Aggregate
+        return Promise.all([proposalData, voteData, actionData])
+        .then(([proposal, votes, actions]) => {
+            return {
+                id: id,
+                name: proposal.name,
+                author: proposal.author,
+                createdOn: proposal.createdOn.toMillis(),
+                expiresOn: proposal.expiresOn.toMillis(),
+                server: proposal.server,
+                actions: actions,
+                status: proposal.status,
+                votes: [votes.yes, votes.no],
+            };
+        })
+        .catch((e) => {
+            throw {
+                type: 'db',
+                stage: 'proposalGet',
+                message: 'Proposal Lookup Error',
+                http_status: 500,
+                previous: null,
+            };
+        });
+    },
+    insertNewProposal(proposal) {
+        // Create proposal
+        const proposalDoc = db.collection('proposals').doc(generateSnowflake());
+        const proposalSet = proposalDoc.set({
+            name: proposal.name,
+            author: proposal.author,
+            createdOn: proposal.createdOn,
+            expiresOn: proposal.expiresOn,
+            server: proposal.server,
+            status: proposal.status,
+        });
+
+        // Create actions
+        const actions = proposal.collection('actions');
+        const actionSets = Promise.all(proposal.actions.map((action) => {
+            return actions.add(action);
+        }));
+
+        return Promise.all([proposalSet, actionSets])
+        .then(() => {
+            return proposal;
+        })
+        .catch((e) => {
+            throw {
+                type: 'db',
+                stage: 'proposalInsert',
+                message: 'Proposal Insert Error',
+                http_status: 500,
+                previous: null,
+            };
+        });
+    },
+};
+
+/*
+module.exports = {
+    getProposal(id) {
         const action = db('proposal')
             .select(
                 'proposal.proposal_id',
@@ -45,7 +140,6 @@ module.exports = {
                 };
             }
             else {
-                /* Really could be voteResults too... */
                 const proposal = actionResults[0];
                 const proposalVote = voteResults[0];
                 const actions = actionResults.map((row) => {
@@ -120,3 +214,4 @@ module.exports = {
         });
     },
 };
+*/

@@ -13,6 +13,7 @@ router.use(function(req, res, next) {
     res.header({
         'Access-Control-Allow-Origin': 'http://ddd.io:1024',
         'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, HEAD',
     });
     next();
 });
